@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Usuario {
+  id       Int       @id @default(autoincrement())
+  nombre   String
+  email    String    @unique
+  password String
+  rol      Rol
+  mascotas Mascota[]
+}
+
+model Mascota {
+  id            Int               @id @default(autoincrement())
+  nombre        String
+  especie       String
+  raza          String
+  edad          Int
+  propietarioId Int
+  citas         Cita[]
+  historial     HistorialMedico[]
+  propietario   Usuario           @relation(fields: [propietarioId], references: [id])
+
+  @@index([propietarioId], map: "Mascota_propietarioId_fkey")
+}
+
+model Veterinaria {
+  id            Int               @id @default(autoincrement())
+  nombreClinica String
+  direccion     String
+  telefono      String
+  email         String            @unique
+  password      String
+  citas         Cita[]
+  historial     HistorialMedico[]
+}
+
+model Cita {
+  id            Int         @id @default(autoincrement())
+  mascotaId     Int
+  veterinariaId Int
+  fecha         DateTime
+  notas         String?
+  mascota       Mascota     @relation(fields: [mascotaId], references: [id])
+  veterinaria   Veterinaria @relation(fields: [veterinariaId], references: [id])
+
+  @@index([mascotaId], map: "Cita_mascotaId_fkey")
+  @@index([veterinariaId], map: "Cita_veterinariaId_fkey")
+}
+
+model HistorialMedico {
+  id            Int         @id @default(autoincrement())
+  mascotaId     Int
+  veterinariaId Int
+  fecha         DateTime
+  descripcion   String
+  mascota       Mascota     @relation(fields: [mascotaId], references: [id])
+  veterinaria   Veterinaria @relation(fields: [veterinariaId], references: [id])
+
+  @@index([mascotaId], map: "HistorialMedico_mascotaId_fkey")
+  @@index([veterinariaId], map: "HistorialMedico_veterinariaId_fkey")
+}
+
+enum Rol {
+  usuario
+  veterinaria
+  admin
+}
